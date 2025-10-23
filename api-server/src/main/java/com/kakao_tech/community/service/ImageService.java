@@ -31,6 +31,7 @@ public class ImageService {
         System.out.println("original profile image resource: " + profileImage.getResource());
         // 이미지를 로컬에 저장한다.
         try {
+            // 지금 이미지 저장하는거 하고 있어요 찰리
             profileImage.transferTo(new File("/Users/beemo.cloud/Desktop/study/kakaotech-community/local/images/test.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
