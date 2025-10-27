@@ -17,7 +17,7 @@ public class Session {
     private Long id;
 
     @Column(unique = false, nullable = false, length = 64)
-    private String sessionId;
+    private String sid;
 
     @Column(unique = false, nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime createdAt;
@@ -31,8 +31,8 @@ public class Session {
 
     protected Session() {}
 
-    public Session(String sessionId, User user) {
-        this.sessionId = sessionId;
+    public Session(String sid, User user) {
+        this.sid = sid;
         this.createdAt = LocalDateTime.now();
         this.expiredAt = LocalDateTime.now().plusMinutes(30);
 
