@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kakao_tech.community.entity.Session;
 import com.kakao_tech.community.entity.User;
+import com.kakao_tech.community.exception.CustomErrorCode;
+import com.kakao_tech.community.exception.RestApiException;
 import com.kakao_tech.community.provider.SessionProvider;
 import com.kakao_tech.community.repository.SessionRepository;
 import com.kakao_tech.community.repository.UserRepository;
@@ -34,7 +36,7 @@ public class NewUserSerivce {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null || !checkPassword(user, password)) {
-            return null;
+            throw new RestApiException(CustomErrorCode.DIFFERENT_SIGN_INFO);
         }
 
         sessionRepository.deleteByUserId(user.getId());
