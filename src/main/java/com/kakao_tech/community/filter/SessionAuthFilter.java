@@ -23,7 +23,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
     // 필터 제외 경로 목록
     private static final String[] EXCLUDED_PATHS = {
-            "/api/users/signup", "/api/users/signin"
+            "/", "/api/users", "/api/signIn"
     };
 
     // 필터 제외 경로 설정
