@@ -20,9 +20,10 @@ public class SessionProvider {
         return sid;
     }
 
-    public void vaildate(String sid) {
+    public void validate(String sid) {
         Session session = sessionRepository.findBySid(sid);
-        if (session != null) {
+
+        if (session == null) {
             throw new RestApiException(CustomErrorCode.INVALID_SESSIONID);
         }
     }
