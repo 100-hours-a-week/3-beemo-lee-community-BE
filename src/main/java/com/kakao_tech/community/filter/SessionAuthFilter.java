@@ -1,11 +1,12 @@
 package com.kakao_tech.community.filter;
 
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import com.kakao_tech.community.exception.RestApiException;
 import com.kakao_tech.community.provider.SessionProvider;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -38,24 +39,21 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain chain
-    ) throws IOException, ServletException {
-
+            @NonNull FilterChain chain) throws IOException, ServletException {
 
         Optional<String> sid = extractSid(request);
 
         // 요청 쿠키에 sid 없는 경우에 접근권한 없음 처리
         if (sid.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            chain.doFilter(request, response);
             return;
         }
 
-        // 토큰 검증 및 속성 설정
-        if (!validateAndSetAttributes(sid.get(), request)) {
-            // 토큰이 잘못된 경우 → index면 리다이렉트, 그 외는 401
+        try {
+            sessionProvider.validate(sid.get());
+        } catch (RestApiException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            return; 
         }
 
         chain.doFilter(request, response);
@@ -63,8 +61,8 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
     // 루트에 온 인덱스인지 확인하는 메서드인데 API 서버라서 사용하지 않는다.
     // private boolean isIndexRequest(HttpServletRequest request) {
-    //     String uri = request.getRequestURI();
-    //     return "/".equals(uri) || "/index".equals(uri);
+    // String uri = request.getRequestURI();
+    // return "/".equals(uri) || "/index".equals(uri);
     // }
 
     // 세션 추출 (쿠키에서)
@@ -80,15 +78,5 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 .filter(cookie -> "sid".equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst();
-    }
-
-    // 세션 검증
-    private boolean validateAndSetAttributes(String sessionId, HttpServletRequest request) {
-        try {
-            sessionProvider.vaildate(sessionId);
-            return true;
-        } catch (Exception exception) {
-            return false;
-        }
     }
 }
