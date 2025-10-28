@@ -25,6 +25,8 @@ public class Session {
     @Column(unique = false, nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime expiredAt;
 
+    // 세션 무효화 하면 세션을 바로 삭제하는 방향으로 진행
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", columnDefinition = "INT")
     private User user;
