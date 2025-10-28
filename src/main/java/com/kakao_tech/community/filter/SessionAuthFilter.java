@@ -23,7 +23,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
     // 필터 제외 경로 목록
     private static final String[] EXCLUDED_PATHS = {
-            "/", "/api/users", "/api/signIn"
+            "/api/users", "/api/signIn"
     };
 
     // 필터 제외 경로 설정
@@ -82,11 +82,10 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 .findFirst();
     }
 
-    // 세션 검증 및 요청 속성 설정
+    // 세션 검증
     private boolean validateAndSetAttributes(String sessionId, HttpServletRequest request) {
         try {
-            // var sid = sessionProvider.parse(sessionId);
-            System.out.println("ㅋㅋ일단 쿠키 값 어떻게 들어오는 지 확인해보죠!!!!: " + sessionId);
+            sessionProvider.vaildate(sessionId);
             return true;
         } catch (Exception exception) {
             return false;
