@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface SessionRepository extends JpaRepository<Session, Long> {
     Session findBySessionKey(String sessionKey);
     boolean existsBySessionKey(String sessionKey);
+    void deleteByUserId(Integer userId);
 }
