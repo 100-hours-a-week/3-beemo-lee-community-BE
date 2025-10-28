@@ -27,6 +27,10 @@ public class SessionProvider {
             throw new RestApiException(CustomErrorCode.INVALID_SESSIONID);
         }
 
-        // TODO : 세션 만료 시간 체크 필요.
+        if(session.getExpiredAt().isBefore(java.time.LocalDateTime.now())) {
+            // TODO : 인증 만료라고 코드 수정해야함.
+            // 근데 만료시간이 잘못 찍히는거같음.
+            throw new RestApiException(CustomErrorCode.INVALID_SESSIONID);
+        }
     }
 }
