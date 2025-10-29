@@ -37,8 +37,10 @@ dependencies {
 
 	implementation 'org.mindrot:jbcrypt:0.4'
 
-	// 교제에 있는 crypto 적용하기 위해 불러온 라이브러리 충분히 jbcrpyt를 사용해서 할 수 있을거라 생각하지만 일단 적용
-	implementation 'org.springframework.security:spring-security-crypto:6.3.3'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'org.springframework.security:spring-security-crypto:6.3.3'
 
 	// 핫로드 개발 도구 추가
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
