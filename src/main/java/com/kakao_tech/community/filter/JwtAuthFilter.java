@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.kakao_tech.community.provider.JwtProvider;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
