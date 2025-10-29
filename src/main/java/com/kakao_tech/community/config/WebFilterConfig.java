@@ -1,7 +1,6 @@
 package com.kakao_tech.community.config;
 
 import jakarta.servlet.Filter;
-// import kr.adapterz.springjwt.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +11,12 @@ import com.kakao_tech.community.filter.SessionAuthFilter;
 @Configuration
 @RequiredArgsConstructor
 public class WebFilterConfig {
-    private final SessionAuthFilter sessionAuthFilter;
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public FilterRegistrationBean<Filter> sessionFilter() {
+    public FilterRegistrationBean<Filter> jwtFilter() {
         FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
-        filterRegistrationBean.setFilter(sessionAuthFilter);
+        filterRegistrationBean.setFilter(jwtAuthFilter);
         filterRegistrationBean.addUrlPatterns("/*");
         filterRegistrationBean.setOrder(1);
         return filterRegistrationBean;
