@@ -60,7 +60,7 @@ public class NewUserSerivce {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
+        cookie.setMaxAge(maxAge * 60); // 여기가 초가 기준이라서 60곱해줘야 30분동안 쿠기가 유지됨.
         response.addCookie(cookie);
     }
 
