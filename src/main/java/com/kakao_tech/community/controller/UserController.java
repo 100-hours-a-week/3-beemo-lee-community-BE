@@ -29,7 +29,7 @@ public class UserController {
     public final UserService userService;
     public final NewUserService newUserService;
 
-    @PostMapping("/signIn")
+    @PostMapping("/signin")
     public ResponseEntity<?> signInUser(
             @RequestBody Map<String, String> body,
             HttpServletResponse response,
@@ -70,6 +70,12 @@ public class UserController {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return Map.of("error", "Refresh token invalid or expired");
         }
+    }
+
+    @PostMapping("/signout")
+    public String signOutUser(HttpServletResponse response) {
+        newUserService.signOutUser(response);
+        return "redirect:/login";
     }
 
     // 회원가입 기능

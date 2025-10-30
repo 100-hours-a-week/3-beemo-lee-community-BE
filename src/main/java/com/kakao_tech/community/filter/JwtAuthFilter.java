@@ -24,7 +24,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     // 필터 제외 경로 목록
     private static final String[] EXCLUDED_PATHS = {
-            "/api/users", "/api/signIn", "/api/refresh"
+            "/api/users", "/api/signin", "/api/signout", "/api/refresh"
     };
 
     // 필터 제외 경로 설정
