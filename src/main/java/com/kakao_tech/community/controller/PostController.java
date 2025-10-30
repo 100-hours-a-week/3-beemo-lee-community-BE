@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kakao_tech.community.dto.PostDTO;
-import com.kakao_tech.community.dto.SessionDTO;
 import com.kakao_tech.community.entity.User;
 import com.kakao_tech.community.service.PostService;
 
