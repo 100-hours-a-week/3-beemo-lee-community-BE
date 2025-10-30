@@ -1,7 +1,6 @@
 package com.kakao_tech.community.controller;
 
 import com.kakao_tech.community.dto.UserDTO;
-import com.kakao_tech.community.service.NewUserService;
 import com.kakao_tech.community.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,7 +26,6 @@ import java.util.Map;
 public class UserController {
 
     public final UserService userService;
-    public final NewUserService newUserService;
 
     @PostMapping("/signin")
     public ResponseEntity<?> signInUser(
@@ -35,7 +33,7 @@ public class UserController {
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
 
-        String accessToken = newUserService.signInUser(body.get("email"), body.get("password"), response);
+        String accessToken = userService.signInUser(body.get("email"), body.get("password"), response);
 
         if (accessToken == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "아이디또는 비밀번호가 잘못되었습니다.");
@@ -56,7 +54,7 @@ public class UserController {
         }
 
         try {
-            var tokenRes = newUserService.refreshTokens(refreshToken, response);
+            var tokenRes = userService.refreshTokens(refreshToken, response);
 
             if (tokenRes == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -76,7 +74,7 @@ public class UserController {
     public ResponseEntity<?> signOutUserrefresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
-        newUserService.signOutUser(response, refreshToken);
+        userService.signOutUser(response, refreshToken);
         return ResponseEntity.ok().body(Map.of("message", "로그아웃 성공"));
     }
 
