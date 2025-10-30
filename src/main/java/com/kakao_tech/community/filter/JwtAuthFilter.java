@@ -24,7 +24,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     // 필터 제외 경로 목록
     private static final String[] EXCLUDED_PATHS = {
-            "/api/users", "/api/signIn"
+            "/api/users", "/api/signIn", "/api/refresh"
     };
 
     // 필터 제외 경로 설정
@@ -39,8 +39,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain chain
-    ) throws IOException, ServletException {
+            @NonNull FilterChain chain) throws IOException, ServletException {
         Optional<String> token = extractToken(request);
 
         // 토큰 없음 → index 요청 시 login으로 리다이렉트
@@ -57,7 +56,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         chain.doFilter(request, response);
     }
-
 
     // 토큰 추출 (헤더 우선, 쿠키 다음)
     private Optional<String> extractToken(HttpServletRequest request) {
