@@ -19,7 +19,7 @@ public class JwtProvider {
             Base64.getDecoder().decode("YWRhcHRlcnphZGFwdGVyemFkYXB0ZXJ6YWRhcHRlcnphZGFwdGVyeg==") // adapterzadapterzadapterzadapterzadapterz
     );
 
-    public String createAccessToken(Long userId, String role) {
+    public String createAccessToken(Integer userId, String role) {
         long accessTtlSec = 15 * 60;
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
@@ -34,7 +34,7 @@ public class JwtProvider {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt);
     }
 
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(Integer userId) {
         long refreshTtlSec = 14L * 24 * 3600; // 14일
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))

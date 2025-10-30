@@ -45,7 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 토큰 없음 → index 요청 시 login으로 리다이렉트
         if (token.isEmpty()) {
-            chain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 

@@ -15,6 +15,8 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Integer userId;
+
     @Column(unique = true)
     private String token;
 
@@ -22,7 +24,7 @@ public class RefreshToken {
 
     private boolean revoked;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", columnDefinition = "INT")
-    private User user;
+    // @OneToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "user_id", columnDefinition = "INT")
+    // private User user;
 }

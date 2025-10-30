@@ -1,7 +1,7 @@
 package com.kakao_tech.community.controller;
 
 import com.kakao_tech.community.dto.UserDTO;
-import com.kakao_tech.community.service.NewUserSerivce;
+import com.kakao_tech.community.service.NewUserService;
 import com.kakao_tech.community.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class UserController {
 
     public final UserService userService;
-    public final NewUserSerivce newUserService;
+    public final NewUserService newUserService;
 
     @PostMapping("/signIn")
     public ResponseEntity<?> signInUser(
@@ -32,7 +32,12 @@ public class UserController {
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
 
-        newUserService.signInUser(body.get("email"),body.get("password"), response);
+        String accessToken = newUserService.signInUser(body.get("email"), body.get("password"),response);
+        
+        if (accessToken == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "아이디또는 비밀번호가 잘못되었습니다.");
+            return ResponseEntity.status(401).build();
+        }
 
         return ResponseEntity.ok().body(Map.of("message", "로그인 성공"));
     }
