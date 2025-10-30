@@ -73,8 +73,10 @@ public class UserController {
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<?> signOutUser(HttpServletResponse response) {
-        newUserService.signOutUser(response);
+    public ResponseEntity<?> signOutUserrefresh(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
+        newUserService.signOutUser(response, refreshToken);
         return ResponseEntity.ok().body(Map.of("message", "로그아웃 성공"));
     }
 

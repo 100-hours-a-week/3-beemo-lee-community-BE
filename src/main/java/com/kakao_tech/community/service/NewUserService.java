@@ -56,6 +56,7 @@ public class NewUserService {
     public TokenResponse refreshTokens(String refreshToken, HttpServletResponse response) {
         var parsedRefreshToken = jwtProvider.parse(refreshToken);
 
+        // 여기서 만료처리 확인함
         RefreshToken entity = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken).orElse(null);
 
         if (entity == null || entity.getExpiresAt().isBefore(Instant.now())) {
@@ -71,17 +72,31 @@ public class NewUserService {
 
         // refresh token은 유지하고 access token만 새로 발급
         String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
-        
+
         // access token 쿠키만 갱신
         addTokenCookie(response, "accessToken", newAccessToken, ACCESS_TOKEN_EXPIRATION);
 
         return new TokenResponse(newAccessToken, refreshToken);
     }
 
-    public void signOutUser(HttpServletResponse response) {
+    @Transactional
+    public void signOutUser(HttpServletResponse response, String refreshToken) {
         // 쿠키 즉시 만료
         addTokenCookie(response, "accessToken", null, 0);
         addTokenCookie(response, "refreshToken", null, 0);
+
+        // 해당 리프레시 토큰 만료 처리
+        System.out.println("revoking refresh token: " + refreshToken);
+        revokedRefreshToken(refreshToken);
+    }
+
+    // 데이터베이스에서 리프레쉬 토큰을 만료처리함.
+    public void revokedRefreshToken(String refreshToken) {
+        RefreshToken tokenEntity = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken).orElse(null);
+        if (tokenEntity != null) {
+            tokenEntity.setRevoked(true);
+            refreshTokenRepository.save(tokenEntity);
+        }
     }
 
     /** Access / Refresh 토큰을 새로 발급하고 DB에 저장 */
@@ -118,5 +133,6 @@ public class NewUserService {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
-    public record TokenResponse(String accessToken, String refreshToken) { }
+    public record TokenResponse(String accessToken, String refreshToken) {
+    }
 }
