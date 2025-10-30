@@ -73,9 +73,9 @@ public class UserController {
     }
 
     @PostMapping("/signout")
-    public String signOutUser(HttpServletResponse response) {
+    public ResponseEntity<?> signOutUser(HttpServletResponse response) {
         newUserService.signOutUser(response);
-        return "redirect:/login";
+        return ResponseEntity.ok().body(Map.of("message", "로그아웃 성공"));
     }
 
     // 회원가입 기능
