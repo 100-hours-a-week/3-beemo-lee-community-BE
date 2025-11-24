@@ -1,9 +1,9 @@
 package com.kakao_tech.community.service;
 
-import com.kakao_tech.community.dto.UserDTO;
+import com.kakao_tech.community.dto.user.SignUpDTO;
 import com.kakao_tech.community.entity.RefreshToken;
 import com.kakao_tech.community.entity.User;
-import com.kakao_tech.community.exception.CustomErrorCode;
+import com.kakao_tech.community.exception.AuthErrorCode;
 import com.kakao_tech.community.exception.RestApiException;
 import com.kakao_tech.community.provider.JwtProvider;
 import com.kakao_tech.community.repository.RefreshTokenRepository;
@@ -142,32 +142,43 @@ public class UserService {
     public record TokenResponse(String accessToken, String refreshToken) {
     }
 
-    public UserDTO.SignUpResponse createUser(UserDTO.SignUpRequest userDTO, MultipartFile profileImage) {
-        if (userRepository.existsByNickname(userDTO.getNickname())) {
-            throw new RestApiException(CustomErrorCode.DUPLICATE_NICKNAME);
+    @Transactional
+    public SignUpDTO.Response createUser(SignUpDTO.Request request, MultipartFile profileImage) {
+
+        // 닉네임 중복 검사
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new RestApiException(AuthErrorCode.DUPLICATE_NICKNAME);
         }
 
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new RestApiException(CustomErrorCode.DUPLICATE_EMAIL);
+        // 이메일 중복 검사
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RestApiException(AuthErrorCode.DUPLICATE_EMAIL);
         }
 
         User user = new User(
-                userDTO.getNickname(),
-                userDTO.getEmail(),
-                BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt()),
-                userDTO.getProfileUrl());
+                request.getNickname(),
+                request.getEmail(),
+                BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
 
+        // 먼저 user를 DB에 저장하여 ID를 할당받음
         user = userRepository.save(user);
 
         if (profileImage != null) {
-            user.setProfileUrl(
-                    imageService.uploadImage(
-                            profileImage,
-                            "users/" + user.getId() + "/profile/",
-                            "profile_" + profileImage.getOriginalFilename()));
-            userRepository.save(user);
+            // 파일 확장자 추출
+            String originalFilename = profileImage.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+
+            String imageUrl = imageService.uploadImage(
+                    profileImage,
+                    "users/" + user.getId() + "/",
+                    "profile" + extension);
+            user.setProfileUrl(imageUrl);
         }
 
-        return new UserDTO.SignUpResponse(user);
+        return new SignUpDTO.Response(
+                user.getId(),
+                user.getNickname(),
+                user.getEmail(),
+                user.getProfileUrl());
     }
 }

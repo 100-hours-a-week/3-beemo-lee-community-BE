@@ -1,9 +1,10 @@
 package com.kakao_tech.community.controller;
 
-import com.kakao_tech.community.dto.UserDTO;
+import com.kakao_tech.community.dto.user.SignUpDTO;
 import com.kakao_tech.community.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        return ResponseEntity.ok().body(Map.of("message", "로그인 성공"));
+        return ResponseEntity.status(201).body(Map.of("message", "로그인 성공"));
     }
 
     @PostMapping("/refresh")
@@ -71,27 +72,21 @@ public class UserController {
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<?> signOutUserrefresh(
+    public ResponseEntity<?> signOutUserRefresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
         userService.signOutUser(response, refreshToken);
         return ResponseEntity.ok().body(Map.of("message", "로그아웃 성공"));
     }
 
-    // 회원가입 기능
+    // 회원가입
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestPart("user") Map<String, String> body,
+    public ResponseEntity<?> createUser(
+            @Valid @RequestPart(value = "user") SignUpDTO.Request user,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
-        UserDTO.SignUpRequest userDTO = new UserDTO.SignUpRequest(
-                body.get("nickname"),
-                body.get("email"),
-                body.get("password"));
+        SignUpDTO.Response result = userService.createUser(user, profileImage);
 
-        String image = body.get("profile");
-        System.out.println(image);
-
-        UserDTO.SignUpResponse result = userService.createUser(userDTO, profileImage);
         return ResponseEntity.status(201).body(result);
     }
 
