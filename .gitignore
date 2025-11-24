@@ -38,8 +38,13 @@ out/
 ### VS Code ###
 .vscode/
 
-
 ### Java ###
 *.jar
 
+### Mac ###
 .DS_Store
+
+
+### ENV ###
+.env*
+!.env.example
