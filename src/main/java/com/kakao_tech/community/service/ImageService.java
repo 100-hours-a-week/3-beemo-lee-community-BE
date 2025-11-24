@@ -1,6 +1,5 @@
 package com.kakao_tech.community.service;
 
-import com.kakao_tech.community.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,7 +12,7 @@ public class ImageService {
     @Value("${app.upload-dir:./images/}")
     private String uploadDir;
 
-    public ImageService(ImageRepository imageRepository) {
+    public ImageService() {
     }
 
     public String uploadImage(MultipartFile image, String path, String fileName) {

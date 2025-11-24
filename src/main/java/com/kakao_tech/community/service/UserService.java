@@ -170,7 +170,7 @@ public class UserService {
 
             String imageUrl = imageService.uploadImage(
                     profileImage,
-                    "users/" + user.getId() + "/profile/",
+                    "users/" + user.getId() + "/",
                     "profile" + extension);
             user.setProfileUrl(imageUrl);
         }
