@@ -28,6 +28,4 @@ COPY --from=build --chown=worker:worker /app/build/libs/*.jar ./app.jar
 
 USER worker:worker
 
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-Dspring.profiles.active=${PROFILE}", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=${ENV}", "-jar", "app.jar"]

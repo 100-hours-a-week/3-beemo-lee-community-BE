@@ -1,10 +1,17 @@
 services:
-  dev-community-was:
+  api-server:
     build: .
-    env_file: .env
-    networks:
-      - community-network
-
-networks:
-  community-network:
-    external: true
+    image: ${DOCKER_REG_ORG}/${DOCKER_IMG_NAME}:${DOKCER_IMG_TAG}
+    ports:
+      - ${API_SERVER_HOST_PORT}:${API_SERVER_PORT}
+    env_file:
+      - .env
+    environment:
+      - ENV=${ENV}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_NAME=${DATABASE_SCHEMA}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    restart: always
