@@ -1,6 +1,10 @@
 services:
   api-server:
-    build: .
+    build:
+      context: .
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     image: ${DOCKER_REG_ORG}/${DOCKER_IMG_NAME}:${DOKCER_IMG_TAG}
     ports:
       - ${API_SERVER_HOST_PORT}:${API_SERVER_PORT}
