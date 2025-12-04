@@ -16,7 +16,8 @@ import java.util.UUID;
 @Component
 public class JwtProvider {
     private final Key key = Keys.hmacShaKeyFor(
-            Base64.getDecoder().decode("YWRhcHRlcnphZGFwdGVyemFkYXB0ZXJ6YWRhcHRlcnphZGFwdGVyeg==") // adapterzadapterzadapterzadapterzadapterz
+        // TODO: 디코드 해시 환경변수로 관리 필요
+        Base64.getDecoder().decode("YWRhcHRlcnphZGFwdGVyemFkYXB0ZXJ6YWRhcHRlcnphZGFwdGVyeg==") // adapterzadapterzadapterzadapterzadapterz
     );
 
     public String createAccessToken(Integer userId, String role) {
