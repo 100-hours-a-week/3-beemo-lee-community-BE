@@ -1,4 +1,4 @@
-package com.kakao_tech.community.exception;
+package com.kakao_tech.community.exception.handler;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -6,13 +6,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.kakao_tech.community.dto.ErrorDTO;
+import com.kakao_tech.community.exception.common.ErrorCode;
+import com.kakao_tech.community.exception.common.RestApiException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RestApiException.class)
     public ResponseEntity<ErrorDTO.Response> restApiExceptionHandler(RestApiException e) {
-        AuthErrorCode errorCode = e.getAuthErrorCode();
+        ErrorCode errorCode = e.getErrorCode();
         ErrorDTO.Response errorResponse = new ErrorDTO.Response(errorCode.getCode(), errorCode.getMessage());
         return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
     }

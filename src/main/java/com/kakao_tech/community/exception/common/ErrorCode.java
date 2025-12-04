@@ -1,4 +1,4 @@
-package com.kakao_tech.community.exception;
+package com.kakao_tech.community.exception.common;
 
 import org.springframework.http.HttpStatus;
 
