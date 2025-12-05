@@ -1,10 +1,11 @@
 package com.kakao_tech.community.service;
 
 import com.kakao_tech.community.dto.user.SignUpDTO;
+import com.kakao_tech.community.dto.user.UserDTO;
 import com.kakao_tech.community.entity.RefreshToken;
 import com.kakao_tech.community.entity.User;
-import com.kakao_tech.community.exception.AuthErrorCode;
-import com.kakao_tech.community.exception.RestApiException;
+import com.kakao_tech.community.exception.code.AuthErrorCode;
+import com.kakao_tech.community.exception.common.RestApiException;
 import com.kakao_tech.community.provider.JwtProvider;
 import com.kakao_tech.community.repository.RefreshTokenRepository;
 import com.kakao_tech.community.repository.UserRepository;
@@ -180,5 +181,89 @@ public class UserService {
                 user.getNickname(),
                 user.getEmail(),
                 user.getProfileUrl());
+    }
+
+    @Transactional(readOnly = true)
+    public UserDTO.Response getUserById(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
+
+        return UserDTO.Response.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .profileUrl(user.getProfileUrl())
+                .build();
+    }
+
+    @Transactional
+    public UserDTO.UpdateResponse updateUser(Integer userId, UserDTO.UpdateRequest request, MultipartFile profileImage) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 닉네임 변경
+        if (request.getNickname() != null && !request.getNickname().equals(user.getNickname())) {
+            // 닉네임 중복 검사
+            if (userRepository.existsByNickname(request.getNickname())) {
+                throw new RestApiException(AuthErrorCode.DUPLICATE_NICKNAME);
+            }
+            user.setNickname(request.getNickname());
+        }
+
+        // 프로필 이미지 변경
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String originalFilename = profileImage.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+
+            String imageUrl = imageService.uploadImage(
+                    profileImage,
+                    "users/" + user.getId() + "/",
+                    "profile" + extension);
+            user.setProfileUrl(imageUrl);
+        }
+
+        userRepository.save(user);
+
+        return UserDTO.UpdateResponse.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .profileUrl(user.getProfileUrl())
+                .message("회원 정보가 수정되었어요.")
+                .build();
+    }
+
+    @Transactional
+    public UserDTO.PasswordUpdateResponse updatePassword(Integer userId, UserDTO.PasswordUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RestApiException(AuthErrorCode.WRONG_PASSWORD);
+        }
+
+        // 새 비밀번호로 변경
+        user.setPassword(BCrypt.hashpw(request.getNewPassword(), BCrypt.gensalt()));
+        userRepository.save(user);
+
+        return UserDTO.PasswordUpdateResponse.builder()
+                .message("비밀번호가 변경되었어요.")
+                .build();
+    }
+
+    @Transactional
+    public void deleteUser(Integer userId, HttpServletResponse response) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 리프레시 토큰 삭제
+        refreshTokenRepository.deleteByUserId(userId);
+
+        // 쿠키 만료
+        addTokenCookie(response, "accessToken", null, 0);
+        addTokenCookie(response, "refreshToken", null, 0);
+
+        // 사용자 삭제
+        userRepository.delete(user);
     }
 }

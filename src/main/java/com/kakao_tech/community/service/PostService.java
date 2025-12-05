@@ -3,16 +3,19 @@ package com.kakao_tech.community.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kakao_tech.community.dto.PostDTO;
 import com.kakao_tech.community.dto.PostDTO.SummaryResponse;
 import com.kakao_tech.community.entity.Post;
 import com.kakao_tech.community.entity.User;
+import com.kakao_tech.community.exception.code.PostErrorCode;
+import com.kakao_tech.community.exception.common.RestApiException;
 import com.kakao_tech.community.repository.PostRepository;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.AllArgsConstructor;
 
@@ -75,7 +78,34 @@ public class PostService {
         return response;
     }
 
-    @Transient
+    public PostDTO.DetailResponse getPost(Long postId) {
+        Optional<Post> optionalPost = postRepository.findById(postId);
+
+        Post post = optionalPost.orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
+
+        User user = post.getUser();
+        PostDTO.Author author = PostDTO.Author.builder()
+                .id(user.getId())
+                .nickname(user.getNickname())
+                .profileUrl(user.getProfileUrl())
+                .build();
+
+        PostDTO.DetailResponse response = PostDTO.DetailResponse.builder()
+                .id(post.getId())
+                .author(author)
+                .title(post.getTitle())
+                .body(post.getBody())
+                .viewsCnt(post.getViewsCnt())
+                .likesCnt(post.getLikesCnt())
+                .commentsCnt(post.getCommentCnt())
+                .createAt(post.getCreatedAt())
+                .updateAt(post.getUpdatedAt())
+                .build();
+
+        return response;
+    }
+
+    @Transactional
     public PostDTO.CreateResponse createPost(String title, String body, String imageUrl, User user) {
         Post post = new Post(title, body, imageUrl, user);
         post = postRepository.save(post);

@@ -2,6 +2,7 @@ package com.kakao_tech.community.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class PostController {
 
@@ -34,6 +35,14 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDTO.DetailResponse> getPost(@PathVariable Long postId) {
+        PostDTO.DetailResponse response = postService.getPost(postId);
+
+        return ResponseEntity.ok(response);
+    }
+    
+
     // 게시글 생성
     // TODO: 사진 여러장 받고 처리할 수 있도록 추가 필요함.
     @PostMapping
@@ -45,5 +54,4 @@ public class PostController {
 
         return ResponseEntity.status(201).body(response);
     }
-
 }

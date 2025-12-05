@@ -1,10 +1,12 @@
-package com.kakao_tech.community.exception;
+package com.kakao_tech.community.exception.code;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 import org.springframework.http.HttpStatus;
 
-import lombok.AllArgsConstructor;
+import com.kakao_tech.community.exception.common.ErrorCode;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum AuthErrorCode implements ErrorCode {
@@ -31,11 +33,14 @@ public enum AuthErrorCode implements ErrorCode {
     // 검증 오류
     // 틀린_패스워드_확인값
     DIFFERENT_PASSWORD_CONFIRM(BAD_REQUEST, "DIFFERENT_PASSWORD_CONFIRM","입력된 비밀번호와 확인 비밀번호가 달라요."),
-    DIFFERENT_SIGN_INFO(BAD_REQUEST, "DIFFERENT_SIGN_INFO","입력된 정보가 올바르지 않아요.");
+    DIFFERENT_SIGN_INFO(BAD_REQUEST, "DIFFERENT_SIGN_INFO","입력된 정보가 올바르지 않아요."),
+    // 존재하지 않는 리소스
+    USER_NOT_FOUND(BAD_REQUEST, "USER_NOT_FOUND", "존재하지 않는 사용자예요."),
+    WRONG_PASSWORD(BAD_REQUEST, "WRONG_PASSWORD", "현재 비밀번호가 올바르지 않아요.");
 
-    private HttpStatus httpStatus;
-    private String code;
-    private String message;
+    private final HttpStatus httpStatus;
+    private final String code;
+    private final String message;
 
     public HttpStatus getHttpStatus() {
         return this.httpStatus;
@@ -48,6 +53,4 @@ public enum AuthErrorCode implements ErrorCode {
     public String getMessage() {
         return this.message;
     }
-
-
 }
