@@ -33,7 +33,10 @@ public enum AuthErrorCode implements ErrorCode {
     // 검증 오류
     // 틀린_패스워드_확인값
     DIFFERENT_PASSWORD_CONFIRM(BAD_REQUEST, "DIFFERENT_PASSWORD_CONFIRM","입력된 비밀번호와 확인 비밀번호가 달라요."),
-    DIFFERENT_SIGN_INFO(BAD_REQUEST, "DIFFERENT_SIGN_INFO","입력된 정보가 올바르지 않아요.");
+    DIFFERENT_SIGN_INFO(BAD_REQUEST, "DIFFERENT_SIGN_INFO","입력된 정보가 올바르지 않아요."),
+    // 존재하지 않는 리소스
+    USER_NOT_FOUND(BAD_REQUEST, "USER_NOT_FOUND", "존재하지 않는 사용자예요."),
+    WRONG_PASSWORD(BAD_REQUEST, "WRONG_PASSWORD", "현재 비밀번호가 올바르지 않아요.");
 
     private final HttpStatus httpStatus;
     private final String code;
