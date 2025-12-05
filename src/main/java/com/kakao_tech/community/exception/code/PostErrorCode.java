@@ -12,10 +12,14 @@ import lombok.AllArgsConstructor;
 public enum PostErrorCode implements ErrorCode {
     // 존재하지 않은 리소스
     INVALID_POST_ID(BAD_REQUEST, "INVALID_POST_ID", "게시물이 존재하지 않아요."),
+    LIKE_NOT_FOUND(BAD_REQUEST, "LIKE_NOT_FOUND", "좋아요를 하지 않은 게시물이에요."),
 
     // 입력값 부재
     REQUIRED_POST_TITLE(BAD_REQUEST, "REQUIRED_POST_TITLE", "게시물 제목을 입력해주세요."),
     REQUIRED_POST_CONTENT(BAD_REQUEST, "REQUIRED_POST_CONTENT", "게시물 내용을 입력해주세요."),
+
+    // 중복 요청
+    ALREADY_LIKED(BAD_REQUEST, "ALREADY_LIKED", "이미 좋아요를 한 게시물이에요."),
 
     // 권한 오류
     FORBIDDEN_POST_ACCESS(HttpStatus.FORBIDDEN, "FORBIDDEN_POST_ACCESS", "게시물에 대한 권한이 없어요.");
