@@ -1,21 +1,17 @@
 package com.kakao_tech.community.controller;
 
+import com.kakao_tech.community.common.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/health")
 public class HealthController {
 
     @GetMapping
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "message", "Server is running"
-        ));
+    public ResponseEntity<ApiResponse<String>> health() {
+        return ResponseEntity.ok(ApiResponse.success("Server is running", "UP"));
     }
 }

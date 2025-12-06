@@ -170,16 +170,7 @@ public class UserService {
             user.setProfileUrl(s3Key);
         }
 
-        // S3 키를 백엔드 API URL로 변환
-        String profileUrl = user.getProfileUrl() != null
-                ? "/api/images/" + user.getProfileUrl()
-                : null;
-
-        return new SignUpDTO.Response(
-                user.getId(),
-                user.getNickname(),
-                user.getEmail(),
-                profileUrl);
+        return SignUpDTO.Response.from(user);
     }
 
     @Transactional(readOnly = true)
@@ -187,17 +178,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
 
-        // S3 키를 백엔드 API URL로 변환
-        String profileUrl = user.getProfileUrl() != null
-                ? "/api/images/" + user.getProfileUrl()
-                : null;
-
-        return UserDTO.Response.builder()
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .email(user.getEmail())
-                .profileUrl(profileUrl)
-                .build();
+        return UserDTO.Response.from(user);
     }
 
     @Transactional
@@ -222,17 +203,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        // S3 키를 백엔드 API URL로 변환
-        String profileUrl = user.getProfileUrl() != null
-                ? "/api/images/" + user.getProfileUrl()
-                : null;
-
-        return UserDTO.UpdateResponse.builder()
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .profileUrl(profileUrl)
-                .message("회원 정보가 수정되었어요.")
-                .build();
+        return UserDTO.UpdateResponse.from(user);
     }
 
     @Transactional

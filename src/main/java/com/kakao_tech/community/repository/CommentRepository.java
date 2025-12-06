@@ -5,6 +5,9 @@ import org.springframework.stereotype.Repository;
 
 import com.kakao_tech.community.entity.Comment;
 
+import java.util.List;
+
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+    List<Comment> findAllByPostIdOrderByCreatedAtAsc(Long postId);
 }

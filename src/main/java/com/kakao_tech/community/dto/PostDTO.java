@@ -1,5 +1,7 @@
 package com.kakao_tech.community.dto;
 
+import com.kakao_tech.community.entity.Post;
+import com.kakao_tech.community.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +20,14 @@ public class PostDTO {
         private Integer id; // 작성자 PK 아이디
         private String nickname; // 작성자 닉네임
         private String profileUrl; // 작성자 프로필 이미지 주소
+
+        public static Author from(User user) {
+            return Author.builder()
+                    .id(user.getId())
+                    .nickname(user.getNickname())
+                    .profileUrl(user.getFullProfileUrl())
+                    .build();
+        }
     }
 
     // 게시글 리스트 가져오기
@@ -44,6 +54,19 @@ public class PostDTO {
         private Integer commentsCnt;
         private LocalDateTime createAt; // 게시글 작성일
         private LocalDateTime updateAt; // 게시글 마지막 수정일
+
+        public static SummaryResponse from(Post post) {
+            return SummaryResponse.builder()
+                    .id(post.getId())
+                    .author(Author.from(post.getUser()))
+                    .title(post.getTitle())
+                    .viewsCnt(post.getViewsCnt())
+                    .likesCnt(post.getLikesCnt())
+                    .commentsCnt(post.getCommentCnt())
+                    .createAt(post.getCreatedAt())
+                    .updateAt(post.getUpdatedAt())
+                    .build();
+        }
     }
 
     // 상세 게시물 조회용
@@ -55,11 +78,29 @@ public class PostDTO {
         private Author author; // 작성자 정보, 아이디, 닉네임, 프로필 이미지 주소
         private String title; // 게시글 제목
         private String body;
+        private String imageUrl; // 게시글 이미지 주소
         private Integer viewsCnt;
         private Integer likesCnt;
         private Integer commentsCnt;
         private LocalDateTime createAt; // 게시글 작성일
         private LocalDateTime updateAt; // 게시글 마지막 수정일
+
+        public static DetailResponse from(Post post) {
+            String fullImageUrl = post.getImageUrl() != null ? "/api/images/" + post.getImageUrl() : null; // TODO: Base URL 관리 필요
+
+            return DetailResponse.builder()
+                    .id(post.getId())
+                    .author(Author.from(post.getUser()))
+                    .title(post.getTitle())
+                    .body(post.getBody())
+                    .imageUrl(fullImageUrl)
+                    .viewsCnt(post.getViewsCnt())
+                    .likesCnt(post.getLikesCnt())
+                    .commentsCnt(post.getCommentCnt())
+                    .createAt(post.getCreatedAt())
+                    .updateAt(post.getUpdatedAt())
+                    .build();
+        }
     }
 
     // 게시글 작성 요청
@@ -77,6 +118,23 @@ public class PostDTO {
     @Builder
     @AllArgsConstructor
     public static class CreateResponse {
+        private Long postId;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateRequest {
+        private String title;
+        private String body;
+        private String imageUrl;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class UpdateResponse {
         private Long postId;
     }
 }

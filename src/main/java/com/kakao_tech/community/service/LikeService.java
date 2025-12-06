@@ -12,13 +12,13 @@ import com.kakao_tech.community.exception.common.RestApiException;
 import com.kakao_tech.community.repository.LikeRepository;
 import com.kakao_tech.community.repository.PostRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LikeService {
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
@@ -42,11 +42,7 @@ public class LikeService {
         post.setLikesCnt(post.getLikesCnt() + 1);
         postRepository.save(post);
 
-        return LikeDTO.AddResponse.builder()
-                .message("좋아요를 했어요.")
-                .postId(postId)
-                .likesCnt(post.getLikesCnt())
-                .build();
+        return LikeDTO.AddResponse.of(post, "좋아요를 했어요.");
     }
 
     @Transactional
@@ -67,23 +63,16 @@ public class LikeService {
         post.setLikesCnt(Math.max(0, post.getLikesCnt() - 1));
         postRepository.save(post);
 
-        return LikeDTO.RemoveResponse.builder()
-                .message("좋아요를 취소했어요.")
-                .postId(postId)
-                .likesCnt(post.getLikesCnt())
-                .build();
+        return LikeDTO.RemoveResponse.of(post, "좋아요를 취소했어요.");
     }
 
+    @Transactional(readOnly = true)
     public LikeDTO.CheckResponse isLikedByUser(Long postId, User user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
 
         boolean isLiked = likeRepository.existsByUserAndPost(user, post);
 
-        return LikeDTO.CheckResponse.builder()
-                .postId(postId)
-                .isLiked(isLiked)
-                .likesCnt(post.getLikesCnt())
-                .build();
+        return LikeDTO.CheckResponse.of(post, isLiked);
     }
 }

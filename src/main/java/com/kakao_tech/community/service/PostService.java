@@ -1,9 +1,10 @@
 package com.kakao_tech.community.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.kakao_tech.community.exception.code.AuthErrorCode;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kakao_tech.community.dto.PostDTO;
 import com.kakao_tech.community.dto.PostDTO.SummaryResponse;
@@ -13,114 +14,94 @@ import com.kakao_tech.community.exception.code.PostErrorCode;
 import com.kakao_tech.community.exception.common.RestApiException;
 import com.kakao_tech.community.repository.PostRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PostService {
 
-    @Autowired
     private final PostRepository postRepository;
+    private final ImageService imageService;
 
+    @Transactional(readOnly = true)
     public PostDTO.ListResponse getPosts(Integer limit, Long offset) {
-        // lastPostId가 NULL(값이 입력되지 않았으면) LONG타입의 맥스값 또는 입력 받은값으로 설정 (내림차순으로 가장 최근의 게시물을
-        // 조회하기 위해서 기준이 필요함.)
-        offset = (offset == null) ? Long.MAX_VALUE : offset;
+        // offset이 없으면 가장 최신 글부터 조회 (Long.MAX_VALUE)
+        long safeOffset = (offset == null) ? Long.MAX_VALUE : offset;
 
-        // Pageable 설정
         Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        List<Post> posts = postRepository.findByIdLessThanOrderByIdDesc(safeOffset, pageable);
 
-        // 내림차순으로 게시물을 가져옴
-        List<Post> posts = postRepository.findByIdLessThanOrderByIdDesc(offset, pageable);
-        List<SummaryResponse> summaryPosts = new ArrayList<>();
+        // Entity -> DTO 변환
+        List<SummaryResponse> summaryPosts = posts.stream()
+                .map(SummaryResponse::from)
+                .collect(Collectors.toList());
 
-        // 응답 DTO를 만들기 위해서 가져온 게시물로 매핑시작
-        for (Post post : posts) {
-            // post 엔티티에 양방향 설정되어 있어서 가능!!
-            User user = post.getUser();
-
-            // S3 키를 백엔드 API URL로 변환
-            String profileUrl = user.getProfileUrl() != null
-                    ? "/api/images/" + user.getProfileUrl()
-                    : null;
-
-            PostDTO.Author author = PostDTO.Author.builder()
-                    .id(user.getId())
-                    .nickname(user.getNickname())
-                    .profileUrl(profileUrl)
-                    .build();
-            PostDTO.SummaryResponse summary = PostDTO.SummaryResponse.builder()
-                    .author(author)
-                    .id(post.getId())
-                    .title(post.getTitle())
-                    .viewsCnt(post.getViewsCnt())
-                    .likesCnt(post.getLikesCnt())
-                    .commentsCnt(post.getCommentCnt())
-                    .createAt(post.getCreatedAt())
-                    .updateAt(post.getUpdatedAt())
-                    .build();
-
-            summaryPosts.add(summary);
-        }
-
-        // 현재 포스트의 총 개수를 가져옴
         long postsTotalCount = postRepository.count();
-        int postsGetCount = summaryPosts.size();
-        // 마지막 게시물의 아이디를 저장, 0부터 시작 size - 1
-        Long lastPostId = summaryPosts.isEmpty() ? null : summaryPosts.get(postsGetCount - 1).getId();
+        Long lastPostId = summaryPosts.isEmpty() ? null : summaryPosts.get(summaryPosts.size() - 1).getId();
 
-        // 응답 DTO 생성
-        PostDTO.ListResponse response = PostDTO.ListResponse.builder()
+        return PostDTO.ListResponse.builder()
                 .posts(summaryPosts)
                 .postsTotalCount(postsTotalCount)
-                .postsGetCount(postsGetCount)
+                .postsGetCount(summaryPosts.size())
                 .lastPostId(lastPostId)
                 .build();
-
-        return response;
     }
 
+    @Transactional(readOnly = true)
     public PostDTO.DetailResponse getPost(Long postId) {
-        Optional<Post> optionalPost = postRepository.findById(postId);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
 
-        Post post = optionalPost.orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
-
-        User user = post.getUser();
-
-        // S3 키를 백엔드 API URL로 변환
-        String profileUrl = user.getProfileUrl() != null
-                ? "/api/images/" + user.getProfileUrl()
-                : null;
-
-        PostDTO.Author author = PostDTO.Author.builder()
-                .id(user.getId())
-                .nickname(user.getNickname())
-                .profileUrl(profileUrl)
-                .build();
-
-        PostDTO.DetailResponse response = PostDTO.DetailResponse.builder()
-                .id(post.getId())
-                .author(author)
-                .title(post.getTitle())
-                .body(post.getBody())
-                .viewsCnt(post.getViewsCnt())
-                .likesCnt(post.getLikesCnt())
-                .commentsCnt(post.getCommentCnt())
-                .createAt(post.getCreatedAt())
-                .updateAt(post.getUpdatedAt())
-                .build();
-
-        return response;
+        return PostDTO.DetailResponse.from(post);
     }
 
     @Transactional
-    public PostDTO.CreateResponse createPost(String title, String body, String imageUrl, User user) {
+    public PostDTO.CreateResponse createPost(String title, String body, MultipartFile image, User user) {
+        String imageUrl = null;
+
+        // 이미지가 있으면 S3에 업로드
+        if (image != null && !image.isEmpty()) {
+            imageUrl = imageService.uploadPostImage(image);
+        }
+
         Post post = new Post(title, body, imageUrl, user);
-        post = postRepository.save(post);
+        postRepository.save(post);
         return new PostDTO.CreateResponse(post.getId());
+    }
+
+    @Transactional
+    public PostDTO.UpdateResponse updatePost(Long postId, String title, String body, MultipartFile image, User user) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
+        }
+
+        String imageUrl = post.getImageUrl(); // 기존 이미지 유지
+
+        // 새 이미지가 있으면 S3에 업로드
+        if (image != null && !image.isEmpty()) {
+            imageUrl = imageService.uploadPostImage(image);
+        }
+
+        post.update(title, body, imageUrl);
+
+        return new PostDTO.UpdateResponse(post.getId());
+    }
+
+    @Transactional
+    public void deletePost(Long postId, User user) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
+        }
+
+        postRepository.delete(post);
     }
 }

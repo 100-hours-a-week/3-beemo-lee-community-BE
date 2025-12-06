@@ -56,7 +56,27 @@ public class Post {
     }
 
     public Post(String title, String body, String imageUrl, User user) {
-        this(title, body, user);
+        this.title = title;
+        this.body = body;
         this.imageUrl = imageUrl;
+        this.user = user;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+
+        // 통계 필드 초기화
+        this.commentCnt = 0;
+        this.likesCnt = 0;
+        this.viewsCnt = 0;
+    }
+
+    public void update(String title, String body, String imageUrl) {
+        this.title = title;
+        this.body = body;
+        this.imageUrl = imageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

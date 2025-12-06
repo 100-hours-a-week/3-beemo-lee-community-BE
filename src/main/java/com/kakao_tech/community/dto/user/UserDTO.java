@@ -1,5 +1,6 @@
 package com.kakao_tech.community.dto.user;
 
+import com.kakao_tech.community.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +16,15 @@ public class UserDTO {
         private String nickname;
         private String email;
         private String profileUrl;
+
+        public static Response from(User user) {
+            return Response.builder()
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .email(user.getEmail())
+                    .profileUrl(user.getFullProfileUrl())
+                    .build();
+        }
     }
 
     @Getter
@@ -34,6 +44,15 @@ public class UserDTO {
         private String nickname;
         private String profileUrl;
         private String message;
+
+        public static UpdateResponse from(User user) {
+            return UpdateResponse.builder()
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .profileUrl(user.getFullProfileUrl())
+                    .message("회원 정보가 수정되었어요.")
+                    .build();
+        }
     }
 
     @Getter

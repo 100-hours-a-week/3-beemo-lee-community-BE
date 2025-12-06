@@ -53,4 +53,8 @@ public class User {
         this.posts.remove(post);
         post.setUser(null);
     }
+
+    public String getFullProfileUrl() {
+        return this.profileUrl != null ? "/api/images/" + this.profileUrl : null;
+    }
 }

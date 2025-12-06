@@ -1,9 +1,11 @@
 package com.kakao_tech.community.dto.user;
 
+import com.kakao_tech.community.entity.User;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,11 +32,21 @@ public class SignUpDTO {
     }
 
     @Getter
+    @Builder
     @AllArgsConstructor
     public static class Response {
         private Integer userId;
         private String nickname;
         private String email;
         private String profileUrl;
+
+        public static Response from(User user) {
+            return Response.builder()
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .email(user.getEmail())
+                    .profileUrl(user.getFullProfileUrl())
+                    .build();
+        }
     }
 }

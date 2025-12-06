@@ -42,4 +42,9 @@ public class Comment {
         this.user = user;
         this.post = post;
     }
+
+    public void update(String body) {
+        this.body = body;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

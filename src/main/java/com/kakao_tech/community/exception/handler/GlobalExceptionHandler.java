@@ -1,11 +1,11 @@
 package com.kakao_tech.community.exception.handler;
 
+import com.kakao_tech.community.common.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.kakao_tech.community.dto.ErrorDTO;
 import com.kakao_tech.community.exception.common.ErrorCode;
 import com.kakao_tech.community.exception.common.RestApiException;
 
@@ -13,18 +13,20 @@ import com.kakao_tech.community.exception.common.RestApiException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RestApiException.class)
-    public ResponseEntity<ErrorDTO.Response> restApiExceptionHandler(RestApiException e) {
+    public ResponseEntity<ApiResponse<Void>> restApiExceptionHandler(RestApiException e) {
         ErrorCode errorCode = e.getErrorCode();
-        ErrorDTO.Response errorResponse = new ErrorDTO.Response(errorCode.getCode(), errorCode.getMessage());
-        return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode.getMessage()));
     }
 
     // Vaild 어노테이션 검증 실패시 에러 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorDTO.Response> handleValidationException(MethodArgumentNotValidException e) {
-
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException e) {
         // TODO: 에러 코드를 분석해서 적절한 AuthErrorCode 매핑
-        ErrorDTO.Response errorResponse = new ErrorDTO.Response("VALIDATION_ERROR", "일단 이 메세지를 보면 얼른 코드 개선하러 와줘..");
-        return ResponseEntity.status(400).body(errorResponse);
+        // 상세 에러 메시지를 e.getBindingResult()에서 꺼낼 수도 있음
+        return ResponseEntity
+                .status(400)
+                .body(ApiResponse.error("입력값이 올바르지 않습니다. (Validation Error)"));
     }
 }

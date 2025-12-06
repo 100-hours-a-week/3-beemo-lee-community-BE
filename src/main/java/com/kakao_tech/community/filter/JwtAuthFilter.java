@@ -24,13 +24,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     // 필터 제외 경로 목록
     private static final String[] EXCLUDED_PATHS = {
-            "/api/users", "/api/signin", "/api/signout", "/api/refresh", "/api/health"
+            "/api/signin", "/api/signout", "/api/refresh", "/api/health"
     };
 
     // 필터 제외 경로 설정
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        // 회원가입(POST /api/users)은 인증 필터 제외
+        if (path.equals("/api/users") && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
+
         return Arrays.stream(EXCLUDED_PATHS).anyMatch(path::startsWith);
     }
 
