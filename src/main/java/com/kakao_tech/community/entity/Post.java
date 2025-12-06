@@ -15,7 +15,7 @@ public class Post {
     @Column(columnDefinition = "BIGINT")
     private Long id;
 
-    @Column(unique = false, nullable = false, length = 12)
+    @Column(unique = false, nullable = false, length = 26)
     private String title;
 
     @Column(unique = false, nullable = false, columnDefinition = "LONGTEXT")
@@ -74,6 +74,20 @@ public class Post {
         this.body = body;
         this.imageUrl = imageUrl;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementViewCount() {
+        this.viewsCnt++;
+    }
+
+    public void incrementCommentCount() {
+        this.commentCnt++;
+    }
+
+    public void decrementCommentCount() {
+        if (this.commentCnt > 0) {
+            this.commentCnt--;
+        }
     }
 
     public void setUser(User user) {
