@@ -1,39 +1,87 @@
 package com.kakao_tech.community.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.sync.ResponseTransformer;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ImageService {
-    @Value("${app.upload-dir:./images/}")
-    private String uploadDir;
 
-    public ImageService() {
+    private final S3Client s3Client;
+
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
+    // 프로필 이미지 업로드 (UUID 파일명)
+    public String uploadProfileImage(MultipartFile image) {
+        // TODO : 이미지 검증 (MIME 타입, 파일 크기)
+
+        String originalFilename = image.getOriginalFilename();
+        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String uuidFilename = "profile-" + UUID.randomUUID() + extension;
+        String s3Key = "public/users/profile/" + uuidFilename;
+
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .contentType(image.getContentType())
+                    .build();
+
+            s3Client.putObject(
+                    putObjectRequest,
+                    RequestBody.fromInputStream(image.getInputStream(), image.getSize())
+            );
+
+            return s3Key;
+        } catch (IOException e) {
+            throw new RuntimeException("S3 업로드 실패", e);
+        }
     }
 
-    public String uploadImage(MultipartFile image, String path, String fileName) {
-        // TODO : 이미지를 검사한다.
+    // S3에서 이미지 다운로드
+    public byte[] downloadImage(String s3Key) {
         try {
-            // 프로젝트 실행 디렉토리 기반 절대 경로
-            String basePath = System.getProperty("user.dir");
-            String fullPath = basePath + File.separator + uploadDir + path;
-            File dir = new File(fullPath);
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObject(
+                GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build(),
+                ResponseTransformer.toBytes()
+            );
 
-            // 폴더가 없으면 생성
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            File file = new File(fullPath + fileName);
-            image.transferTo(file);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return objectBytes.asByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("S3 이미지 조회 실패: " + s3Key, e);
         }
-        // 생성된 이미지 주소를 전송한다.
-        return uploadDir + path + fileName;
+    }
+
+    // S3 객체의 Content-Type 조회
+    public String getContentType(String s3Key) {
+        try {
+            GetObjectResponse response = s3Client.getObject(
+                GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build(),
+                ResponseTransformer.toBytes()
+            ).response();
+
+            return response.contentType();
+        } catch (Exception e) {
+            return "application/octet-stream";
+        }
     }
 }

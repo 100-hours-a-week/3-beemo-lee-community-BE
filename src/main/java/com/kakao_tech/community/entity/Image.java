@@ -1,18 +1,25 @@
 package com.kakao_tech.community.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "BIGINT")
     private Integer id;
 
+    // S3 키 (예: public/users/profile/profile-uuid.jpg)
     @Column(unique = true, nullable = false)
-    private String url;
+    private String s3Key;
+
+    // 원본 파일명
+    @Column(nullable = true)
+    private String originalFilename;
 
     @Column(unique = false, nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime createdAt;
@@ -26,8 +33,10 @@ public class Image {
 
     protected Image() {}
 
-    public Image(String url, User user) {
-        this.url = url;
+    public Image(String s3Key, String originalFilename, User user) {
+        this.s3Key = s3Key;
+        this.originalFilename = originalFilename;
         this.user = user;
+        this.createdAt = LocalDateTime.now();
     }
 }
