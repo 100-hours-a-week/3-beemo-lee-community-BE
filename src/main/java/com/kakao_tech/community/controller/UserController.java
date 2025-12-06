@@ -94,6 +94,12 @@ public class UserController {
         return ResponseEntity.status(201).body(result);
     }
 
+    // 내 정보 조회
+    @GetMapping("/users/me")
+    public ResponseEntity<UserDTO.Response> getMyProfile(@RequestAttribute("userId") Integer userId) {
+        return getUser(userId);
+    }
+
     // 회원 조회
     @GetMapping("/users/{userId}")
     public ResponseEntity<UserDTO.Response> getUser(@PathVariable Integer userId) {
