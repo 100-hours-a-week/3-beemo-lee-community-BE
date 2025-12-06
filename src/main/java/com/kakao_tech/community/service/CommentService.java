@@ -68,6 +68,9 @@ public class CommentService {
         Comment comment = new Comment(body, user, post);
         commentRepository.save(comment);
 
+        // Post의 댓글 수 증가
+        post.incrementCommentCount();
+
         return new CommentDTO.CreateResponse(comment.getId());
     }
 
@@ -100,9 +103,10 @@ public class CommentService {
             throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
         }
 
+        // Post의 댓글 수 감소
+        Post post = comment.getPost();
+        post.decrementCommentCount();
+
         commentRepository.delete(comment);
-        
-        // Post의 댓글 수 감소 로직이 필요하다면 여기서 추가 (현재 Post 엔티티에 commentCnt가 있다면)
-        // 여기서는 생략하거나 PostService와 연동 필요할 수 있음
     }
 }

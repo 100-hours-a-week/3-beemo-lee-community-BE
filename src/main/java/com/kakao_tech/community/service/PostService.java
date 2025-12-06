@@ -50,10 +50,13 @@ public class PostService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PostDTO.DetailResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
+
+        // 조회수 증가
+        post.incrementViewCount();
 
         return PostDTO.DetailResponse.from(post);
     }

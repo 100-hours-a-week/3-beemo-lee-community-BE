@@ -24,9 +24,38 @@ public class ImageService {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
+    // 이미지 검증 메서드
+    private void validateImage(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일이 비어있습니다.");
+        }
+
+        // 파일 크기 검증 (10MB)
+        long maxSize = 10 * 1024 * 1024; // 10MB
+        if (image.getSize() > maxSize) {
+            throw new IllegalArgumentException("파일 크기는 10MB 이하여야 합니다.");
+        }
+
+        // MIME 타입 검증
+        String contentType = image.getContentType();
+        if (contentType == null || !isValidImageType(contentType)) {
+            throw new IllegalArgumentException("지원하지 않는 이미지 형식입니다. (JPG, JPEG, PNG, GIF, WebP만 가능)");
+        }
+    }
+
+    // 허용된 이미지 MIME 타입 확인
+    private boolean isValidImageType(String contentType) {
+        return contentType.equals("image/jpeg") ||
+               contentType.equals("image/jpg") ||
+               contentType.equals("image/png") ||
+               contentType.equals("image/gif") ||
+               contentType.equals("image/webp");
+    }
+
     // 프로필 이미지 업로드 (UUID 파일명)
     public String uploadProfileImage(MultipartFile image) {
-        // TODO : 이미지 검증 (MIME 타입, 파일 크기)
+        // 이미지 검증 (MIME 타입, 파일 크기)
+        validateImage(image);
 
         String originalFilename = image.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -53,7 +82,8 @@ public class ImageService {
 
     // 게시글 이미지 업로드 (UUID 파일명)
     public String uploadPostImage(MultipartFile image) {
-        // TODO : 이미지 검증 (MIME 타입, 파일 크기)
+        // 이미지 검증 (MIME 타입, 파일 크기)
+        validateImage(image);
 
         String originalFilename = image.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));

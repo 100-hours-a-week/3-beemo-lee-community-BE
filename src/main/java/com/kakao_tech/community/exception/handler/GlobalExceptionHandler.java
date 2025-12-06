@@ -29,4 +29,21 @@ public class GlobalExceptionHandler {
                 .status(400)
                 .body(ApiResponse.error("입력값이 올바르지 않습니다. (Validation Error)"));
     }
+
+    // IllegalArgumentException 처리 (이미지 검증 실패 등)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity
+                .status(400)
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
+    // 기타 모든 예외 처리
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+        e.printStackTrace(); // 로그 출력
+        return ResponseEntity
+                .status(500)
+                .body(ApiResponse.error("서버 오류가 발생했습니다: " + e.getMessage()));
+    }
 }
