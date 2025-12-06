@@ -85,6 +85,10 @@ jobs:
               export DOCKER_IMG_TAG=${{ vars.DOCKER_IMG_TAG }}
               export HOST_PORT=${{ vars.HOST_PORT }}
               export CONTAINER_PORT=${{ vars.CONTAINER_PORT}}
+              export AWS_S3_BUCKET_NAME=${{ vars.AWS_S3_BUCKET_NAME }}
+              export AWS_S3_REGION=${{ vars.AWS_S3_REGION }}
+              export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+              export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
               docker compose down
               docker compose pull
               docker compose up -d
