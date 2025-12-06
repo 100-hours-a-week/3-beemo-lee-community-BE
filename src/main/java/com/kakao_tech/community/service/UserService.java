@@ -98,6 +98,7 @@ public class UserService {
     }
 
     // 데이터베이스에서 리프레쉬 토큰을 만료처리함.
+    // TODO: 배치 통해서 리프레쉬 기간 끝난것들 정리해야함.
     public void revokedRefreshToken(String refreshToken) {
         RefreshToken tokenEntity = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken).orElse(null);
         if (tokenEntity != null) {
