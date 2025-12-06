@@ -1,5 +1,6 @@
 package com.kakao_tech.community.controller;
 
+import com.kakao_tech.community.common.response.ApiResponse;
 import com.kakao_tech.community.dto.user.SignUpDTO;
 import com.kakao_tech.community.dto.user.UserDTO;
 import com.kakao_tech.community.service.UserService;
@@ -33,7 +34,7 @@ public class UserController {
     public final UserService userService;
 
     @PostMapping("/signin")
-    public ResponseEntity<?> signInUser(
+    public ResponseEntity<ApiResponse<Void>> signInUser(
             @RequestBody Map<String, String> body,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
@@ -41,75 +42,73 @@ public class UserController {
         String accessToken = userService.signInUser(body.get("email"), body.get("password"), response);
 
         if (accessToken == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "아이디또는 비밀번호가 잘못되었습니다.");
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body(ApiResponse.error("아이디 또는 비밀번호가 잘못되었습니다."));
         }
 
-        return ResponseEntity.status(201).body(Map.of("message", "로그인 성공"));
+        return ResponseEntity.ok(ApiResponse.success("로그인 성공"));
     }
 
     @PostMapping("/refresh")
     @ResponseBody
-    public Map<String, String> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken,
+    public ResponseEntity<ApiResponse<Map<String, String>>> refresh(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
 
         if (refreshToken == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return Map.of("error", "Refresh token missing");
+            return ResponseEntity.status(401).body(ApiResponse.error("Refresh token missing"));
         }
 
         try {
             var tokenRes = userService.refreshTokens(refreshToken, response);
 
             if (tokenRes == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return Map.of("error", "Refresh token invalid or expired");
+                return ResponseEntity.status(401).body(ApiResponse.error("Refresh token invalid or expired"));
             }
 
-            return Map.of(
+            return ResponseEntity.ok(ApiResponse.success(Map.of(
                     "accessToken", tokenRes.accessToken(),
-                    "refreshToken", tokenRes.refreshToken());
+                    "refreshToken", tokenRes.refreshToken()
+            )));
         } catch (ResponseStatusException exception) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return Map.of("error", "Refresh token invalid or expired");
+            return ResponseEntity.status(401).body(ApiResponse.error("Refresh token invalid or expired"));
         }
     }
 
     @PatchMapping("/signout")
-    public ResponseEntity<?> signOutUserRefresh(
+    public ResponseEntity<ApiResponse<Void>> signOutUserRefresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response) {
         userService.signOutUser(response, refreshToken);
-        return ResponseEntity.ok().body(Map.of("message", "로그아웃 성공"));
+        return ResponseEntity.ok(ApiResponse.success("로그아웃 성공"));
     }
 
     // 회원가입
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(
+    public ResponseEntity<ApiResponse<SignUpDTO.Response>> createUser(
             @Valid @RequestPart(value = "user") SignUpDTO.Request user,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         SignUpDTO.Response result = userService.createUser(user, profileImage);
 
-        return ResponseEntity.status(201).body(result);
+        return ResponseEntity.status(201).body(ApiResponse.success("회원가입 성공", result));
     }
 
     // 내 정보 조회
     @GetMapping("/users/me")
-    public ResponseEntity<UserDTO.Response> getMyProfile(@RequestAttribute("userId") Integer userId) {
-        return getUser(userId);
+    public ResponseEntity<ApiResponse<UserDTO.Response>> getMyProfile(@RequestAttribute("userId") Integer userId) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(userId)));
     }
 
     // 회원 조회
     @GetMapping("/users/{userId}")
-    public ResponseEntity<UserDTO.Response> getUser(@PathVariable Integer userId) {
+    public ResponseEntity<ApiResponse<UserDTO.Response>> getUser(@PathVariable Integer userId) {
         UserDTO.Response response = userService.getUserById(userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // 회원 정보 수정
     @PatchMapping("/users/{userId}")
-    public ResponseEntity<UserDTO.UpdateResponse> updateUser(
+    public ResponseEntity<ApiResponse<UserDTO.UpdateResponse>> updateUser(
             @PathVariable Integer userId,
             @RequestAttribute("userId") Integer currentUserId,
             @RequestPart(value = "user", required = false) UserDTO.UpdateRequest request,
@@ -117,43 +116,43 @@ public class UserController {
 
         // 본인만 수정 가능
         if (!userId.equals(currentUserId)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다."));
         }
 
         UserDTO.UpdateResponse response = userService.updateUser(userId, request, profileImage);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보가 수정되었습니다.", response));
     }
 
     // 비밀번호 변경
     @PatchMapping("/users/{userId}/password")
-    public ResponseEntity<UserDTO.PasswordUpdateResponse> updatePassword(
+    public ResponseEntity<ApiResponse<UserDTO.PasswordUpdateResponse>> updatePassword(
             @PathVariable Integer userId,
             @RequestAttribute("userId") Integer currentUserId,
             @RequestBody UserDTO.PasswordUpdateRequest request) {
 
         // 본인만 수정 가능
         if (!userId.equals(currentUserId)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다."));
         }
 
         UserDTO.PasswordUpdateResponse response = userService.updatePassword(userId, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // 회원 탈퇴
     @DeleteMapping("/users/{userId}")
-    public ResponseEntity<Map<String, String>> deleteUser(
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
             @PathVariable Integer userId,
             @RequestAttribute("userId") Integer currentUserId,
             HttpServletResponse response) {
 
         // 본인만 탈퇴 가능
         if (!userId.equals(currentUserId)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다."));
         }
 
         userService.deleteUser(userId, response);
-        return ResponseEntity.ok(Map.of("message", "회원 탈퇴가 완료되었어요."));
+        return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 완료되었습니다."));
     }
 
 }

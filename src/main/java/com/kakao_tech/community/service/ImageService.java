@@ -51,6 +51,33 @@ public class ImageService {
         }
     }
 
+    // 게시글 이미지 업로드 (UUID 파일명)
+    public String uploadPostImage(MultipartFile image) {
+        // TODO : 이미지 검증 (MIME 타입, 파일 크기)
+
+        String originalFilename = image.getOriginalFilename();
+        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String uuidFilename = "post-" + UUID.randomUUID() + extension;
+        String s3Key = "public/posts/" + uuidFilename;
+
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .contentType(image.getContentType())
+                    .build();
+
+            s3Client.putObject(
+                    putObjectRequest,
+                    RequestBody.fromInputStream(image.getInputStream(), image.getSize())
+            );
+
+            return s3Key;
+        } catch (IOException e) {
+            throw new RuntimeException("S3 업로드 실패", e);
+        }
+    }
+
     // S3에서 이미지 다운로드
     public byte[] downloadImage(String s3Key) {
         try {

@@ -1,6 +1,7 @@
 package com.kakao_tech.community.exception.code;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 import org.springframework.http.HttpStatus;
 
@@ -36,7 +37,10 @@ public enum AuthErrorCode implements ErrorCode {
     DIFFERENT_SIGN_INFO(BAD_REQUEST, "DIFFERENT_SIGN_INFO","입력된 정보가 올바르지 않아요."),
     // 존재하지 않는 리소스
     USER_NOT_FOUND(BAD_REQUEST, "USER_NOT_FOUND", "존재하지 않는 사용자예요."),
-    WRONG_PASSWORD(BAD_REQUEST, "WRONG_PASSWORD", "현재 비밀번호가 올바르지 않아요.");
+    WRONG_PASSWORD(BAD_REQUEST, "WRONG_PASSWORD", "현재 비밀번호가 올바르지 않아요."),
+    
+    // 권한 없음
+    ACCESS_DENIED(FORBIDDEN, "ACCESS_DENIED", "권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

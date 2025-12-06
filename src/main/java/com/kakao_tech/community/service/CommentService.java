@@ -15,45 +15,42 @@ import com.kakao_tech.community.repository.CommentRepository;
 import com.kakao_tech.community.repository.PostRepository;
 import com.kakao_tech.community.repository.UserRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CommentService {
 
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
 
-    // TODO: 댓글들 불러오기
-    // Sql문을 여러번 날리는것보단 한번에 SQL한방으로 그런느낌으로 ㅇㅋㅇㅋ
-    // public String getComments(Integer limit, Long offset) {
-    // }
+    // 댓글 목록 가져오기
+    @Transactional(readOnly = true)
+    public CommentDTO.ListResponse getComments(Long postId) {
+        List<Comment> comments = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId);
+
+        List<CommentDTO.Response> commentResponses = comments.stream()
+                .map(CommentDTO.Response::from)
+                .collect(Collectors.toList());
+
+        return CommentDTO.ListResponse.builder()
+                .comments(commentResponses)
+                .commentsTotalCount((long) commentResponses.size())
+                .commentsGetCount(commentResponses.size())
+                .build();
+    }
 
     // 댓글 가져오기
+    @Transactional(readOnly = true)
     public CommentDTO.Response getComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RestApiException(CommentErrorCode.INVALID_COMMENT_ID));
 
-        User user = comment.getUser();
-
-        CommentDTO.Author author =
-            CommentDTO.Author.builder()
-                .id(user.getId())
-                .nickname(user.getNickname())
-                .profileUrl(user.getProfileUrl())
-                .build();
-
-        CommentDTO.Response response =
-            CommentDTO.Response.builder()
-                .id(comment.getId())
-                .author(author)
-                .body(comment.getBody())
-                .createAt(comment.getCreatedAt())
-                .updateAt(comment.getUpdatedAt())
-                .build();
-
-        return response;
+        return CommentDTO.Response.from(comment);
     }
 
     // 댓글 작성
@@ -69,13 +66,43 @@ public class CommentService {
 
         // 댓글 생성 및 저장
         Comment comment = new Comment(body, user, post);
-        comment = commentRepository.save(comment);
+        commentRepository.save(comment);
 
-        CommentDTO.CreateResponse response = new CommentDTO.CreateResponse(comment.getId());
-        return response;
+        return new CommentDTO.CreateResponse(comment.getId());
     }
 
-    // @Transient
-    // public String deleteComment(User user, Comment comment) {
-    // }
+    // 댓글 수정
+    @Transactional
+    public CommentDTO.UpdateResponse updateComment(Long commentId, String body, Integer userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RestApiException(CommentErrorCode.INVALID_COMMENT_ID));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
+        }
+
+        comment.update(body);
+        // JPA Dirty Checking으로 save 호출 안해도 됨
+
+        return CommentDTO.UpdateResponse.builder()
+                .commentId(comment.getId())
+                .body(comment.getBody())
+                .build();
+    }
+
+    // 댓글 삭제
+    @Transactional
+    public void deleteComment(Long commentId, Integer userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RestApiException(CommentErrorCode.INVALID_COMMENT_ID));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
+        }
+
+        commentRepository.delete(comment);
+        
+        // Post의 댓글 수 감소 로직이 필요하다면 여기서 추가 (현재 Post 엔티티에 commentCnt가 있다면)
+        // 여기서는 생략하거나 PostService와 연동 필요할 수 있음
+    }
 }

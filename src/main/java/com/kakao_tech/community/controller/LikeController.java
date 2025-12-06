@@ -1,5 +1,6 @@
 package com.kakao_tech.community.controller;
 
+import com.kakao_tech.community.common.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,35 +26,35 @@ public class LikeController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<LikeDTO.AddResponse> addLike(
+    public ResponseEntity<ApiResponse<LikeDTO.AddResponse>> addLike(
             @PathVariable Long postId,
             @RequestAttribute("userId") Integer userId) {
 
         User user = userService.getUser(userId);
         LikeDTO.AddResponse response = likeService.addLike(postId, user);
 
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(201).body(ApiResponse.success(response));
     }
 
     @DeleteMapping
-    public ResponseEntity<LikeDTO.RemoveResponse> removeLike(
+    public ResponseEntity<ApiResponse<LikeDTO.RemoveResponse>> removeLike(
             @PathVariable Long postId,
             @RequestAttribute("userId") Integer userId) {
 
         User user = userService.getUser(userId);
         LikeDTO.RemoveResponse response = likeService.removeLike(postId, user);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/check")
-    public ResponseEntity<LikeDTO.CheckResponse> checkLike(
+    public ResponseEntity<ApiResponse<LikeDTO.CheckResponse>> checkLike(
             @PathVariable Long postId,
             @RequestAttribute("userId") Integer userId) {
 
         User user = userService.getUser(userId);
         LikeDTO.CheckResponse response = likeService.isLikedByUser(postId, user);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
