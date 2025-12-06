@@ -49,19 +49,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain chain) throws IOException, ServletException {
         Optional<String> token = extractToken(request);
 
-        // 토큰 없음 → index 요청 시 login으로 리다이렉트
+        // 토큰 없음 → 401 Unauthorized
         if (token.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorizedResponse(response, "로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
             return;
         }
 
         // 토큰 검증 및 속성 설정
         if (!validateAndSetAttributes(token.get(), request)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorizedResponse(response, "로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
             return;
         }
 
         chain.doFilter(request, response);
+    }
+
+    // 401 Unauthorized JSON 응답 전송
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format("{\"success\":false,\"message\":\"%s\"}", message));
     }
 
     // 토큰 추출 (헤더 우선, 쿠키 다음)
