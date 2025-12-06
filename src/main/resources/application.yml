@@ -1,6 +1,14 @@
-# Application
+# Application (deprecated - now using S3)
 app:
   upload-dir: images/
+
+# AWS S3
+aws:
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    region: ${AWS_S3_REGION}
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
 
 # Spring Boot
 spring:

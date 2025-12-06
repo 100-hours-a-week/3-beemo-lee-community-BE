@@ -98,6 +98,7 @@ public class UserService {
     }
 
     // 데이터베이스에서 리프레쉬 토큰을 만료처리함.
+    // TODO: 배치 통해서 리프레쉬 기간 끝난것들 정리해야함.
     public void revokedRefreshToken(String refreshToken) {
         RefreshToken tokenEntity = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken).orElse(null);
         if (tokenEntity != null) {
@@ -165,22 +166,20 @@ public class UserService {
         user = userRepository.save(user);
 
         if (profileImage != null) {
-            // 파일 확장자 추출
-            String originalFilename = profileImage.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-
-            String imageUrl = imageService.uploadImage(
-                    profileImage,
-                    "users/" + user.getId() + "/",
-                    "profile" + extension);
-            user.setProfileUrl(imageUrl);
+            String s3Key = imageService.uploadProfileImage(profileImage);
+            user.setProfileUrl(s3Key);
         }
+
+        // S3 키를 백엔드 API URL로 변환
+        String profileUrl = user.getProfileUrl() != null
+                ? "/api/images/" + user.getProfileUrl()
+                : null;
 
         return new SignUpDTO.Response(
                 user.getId(),
                 user.getNickname(),
                 user.getEmail(),
-                user.getProfileUrl());
+                profileUrl);
     }
 
     @Transactional(readOnly = true)
@@ -188,11 +187,16 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RestApiException(AuthErrorCode.USER_NOT_FOUND));
 
+        // S3 키를 백엔드 API URL로 변환
+        String profileUrl = user.getProfileUrl() != null
+                ? "/api/images/" + user.getProfileUrl()
+                : null;
+
         return UserDTO.Response.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
-                .profileUrl(user.getProfileUrl())
+                .profileUrl(profileUrl)
                 .build();
     }
 
@@ -212,22 +216,21 @@ public class UserService {
 
         // 프로필 이미지 변경
         if (profileImage != null && !profileImage.isEmpty()) {
-            String originalFilename = profileImage.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-
-            String imageUrl = imageService.uploadImage(
-                    profileImage,
-                    "users/" + user.getId() + "/",
-                    "profile" + extension);
-            user.setProfileUrl(imageUrl);
+            String s3Key = imageService.uploadProfileImage(profileImage);
+            user.setProfileUrl(s3Key);
         }
 
         userRepository.save(user);
 
+        // S3 키를 백엔드 API URL로 변환
+        String profileUrl = user.getProfileUrl() != null
+                ? "/api/images/" + user.getProfileUrl()
+                : null;
+
         return UserDTO.UpdateResponse.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
-                .profileUrl(user.getProfileUrl())
+                .profileUrl(profileUrl)
                 .message("회원 정보가 수정되었어요.")
                 .build();
     }

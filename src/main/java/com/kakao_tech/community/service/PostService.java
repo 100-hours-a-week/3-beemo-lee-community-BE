@@ -42,10 +42,16 @@ public class PostService {
         for (Post post : posts) {
             // post 엔티티에 양방향 설정되어 있어서 가능!!
             User user = post.getUser();
+
+            // S3 키를 백엔드 API URL로 변환
+            String profileUrl = user.getProfileUrl() != null
+                    ? "/api/images/" + user.getProfileUrl()
+                    : null;
+
             PostDTO.Author author = PostDTO.Author.builder()
                     .id(user.getId())
                     .nickname(user.getNickname())
-                    .profileUrl(user.getProfileUrl())
+                    .profileUrl(profileUrl)
                     .build();
             PostDTO.SummaryResponse summary = PostDTO.SummaryResponse.builder()
                     .author(author)
@@ -84,10 +90,16 @@ public class PostService {
         Post post = optionalPost.orElseThrow(() -> new RestApiException(PostErrorCode.INVALID_POST_ID));
 
         User user = post.getUser();
+
+        // S3 키를 백엔드 API URL로 변환
+        String profileUrl = user.getProfileUrl() != null
+                ? "/api/images/" + user.getProfileUrl()
+                : null;
+
         PostDTO.Author author = PostDTO.Author.builder()
                 .id(user.getId())
                 .nickname(user.getNickname())
-                .profileUrl(user.getProfileUrl())
+                .profileUrl(profileUrl)
                 .build();
 
         PostDTO.DetailResponse response = PostDTO.DetailResponse.builder()

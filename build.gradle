@@ -44,6 +44,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     implementation 'org.springframework.security:spring-security-crypto:6.3.3'
 
+	// aws s3 의존성 추가
+	implementation("software.amazon.awssdk:s3:2.40.1")
+
 	// 핫로드 개발 도구 추가
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
