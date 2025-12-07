@@ -13,6 +13,8 @@ import com.kakao_tech.community.entity.User;
 import com.kakao_tech.community.exception.code.PostErrorCode;
 import com.kakao_tech.community.exception.common.RestApiException;
 import com.kakao_tech.community.repository.PostRepository;
+import com.kakao_tech.community.repository.LikeRepository;
+import com.kakao_tech.community.repository.CommentRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final ImageService imageService;
+    private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional(readOnly = true)
     public PostDTO.ListResponse getPosts(Integer limit, Long offset) {
@@ -105,6 +109,13 @@ public class PostService {
             throw new RestApiException(AuthErrorCode.ACCESS_DENIED);
         }
 
+        // 1. 좋아요 먼저 삭제
+        likeRepository.deleteByPost(post);
+
+        // 2. 댓글 삭제
+        commentRepository.deleteByPost(post);
+
+        // 3. 게시글 삭제
         postRepository.delete(post);
     }
 }
