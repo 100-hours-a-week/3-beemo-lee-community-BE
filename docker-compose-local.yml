@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # 로컬 DB
+  mysql:
+    image: mysql:8.0
+    container_name: backend-local-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-1234}
+      MYSQL_DATABASE: ${DATABASE_SCHEMA:-community}
+      MYSQL_USER: ${DATABASE_USER:-community_user}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-1234}
+    ports:
+      - "${DATABASE_PORT:-3306}:3306"
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data_backend:/var/lib/mysql
+    networks:
+      - backend-local-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # API 서버
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-local-api
+    env_file:
+      - .env
+    environment:
+      # 스프링 부트에서 쓰는 이름이랑 .env 이름이 달라서 맞춰줌
+      - DATABASE_NAME=${DATABASE_SCHEMA:-community}
+    ports:
+      - "${API_SERVER_HOST_PORT:-8080}:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend-local-net
+    restart: unless-stopped
+
+volumes:
+  mysql_data_backend:
+
+networks:
+  backend-local-net:
+    driver: bridge
