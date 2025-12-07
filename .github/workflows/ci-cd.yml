@@ -8,7 +8,26 @@ on:
       - develop # 개발
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: JDK 21 설치
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      
+      - name: gradlew 실행 권한 부여
+        run: chmod +x gradlew
+
+      - name: 테스트 실행
+        run: ./gradlew test
+
   build-and-push-image:
+    needs: test
     runs-on: ubuntu-latest
     # 환경별 변수 적용 (prod, stage, dev)
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name == 'release' && 'stage' || github.ref_name == 'develop' && 'dev' }}
@@ -17,13 +36,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      - name: Docker Hub Login
+      - name: 도커 허브 로그인
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKER_USER_NAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: 이미지 빌드하고 푸시하기
         run: |
           docker build --platform linux/amd64 -t ${{ vars.DOCKER_REG_ORG }}/${{ vars.API_SERVER_IMG_NAME }}:${{ vars.API_SERVER_IMG_TAG }} .
           docker push ${{ vars.DOCKER_REG_ORG }}/${{ vars.API_SERVER_IMG_NAME }}:${{ vars.API_SERVER_IMG_TAG }}
@@ -37,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      - name: Prepare SSH Key
+      - name: SSH 키 준비하기
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/ec2-ssh-private-key.pem
@@ -46,7 +65,7 @@ jobs:
 
       # 1. .env 파일 생성
       # docker-compose가 참조할 환경변수들을 여기서 파일로 만들어줌
-      - name: Create .env file
+      - name: 환경변수 파일(.env) 만들기
         run: |
           cat <<EOF > .env
           # 기본 설정
@@ -79,18 +98,18 @@ jobs:
           EOF
 
       # 2. 파일 서버로 전송 (compose 파일이랑 방금 만든 .env 같이 보냄)
-      - name: Copy files to EC2
+      - name: 배포 파일들 EC2로 보내기
         run: |
           ssh -i ~/.ssh/ec2-ssh-private-key.pem ${{ vars.EC2_SERVER_USER }}@${{ secrets.EC2_SERVER_HOST }} "mkdir -p /home/${{ vars.EC2_SERVER_USER }}/app/web-server"
           scp -i ~/.ssh/ec2-ssh-private-key.pem docker-compose.yml .env ${{ vars.EC2_SERVER_USER  }}@${{ secrets.EC2_SERVER_HOST }}:/home/${{ vars.EC2_SERVER_USER }}/app/web-server/
 
-      - name: Check if Docker is installed
+      - name: 도커 설치되어 있나 확인
         id: check-docker
         run: |
           DOCKER_EXISTS=$(ssh -i ~/.ssh/ec2-ssh-private-key.pem -o StrictHostKeyChecking=no ${{ vars.EC2_SERVER_USER }}@${{ secrets.EC2_SERVER_HOST }} 'command -v docker >/dev/null && echo "true" || echo "false"')
           echo "docker_exists=$DOCKER_EXISTS" >> $GITHUB_OUTPUT
 
-      - name: Install Docker on EC2
+      - name: 도커 없으면 설치하기
         if: steps.check-docker.outputs.docker_exists == 'false'
         run: |
           ssh -i ~/.ssh/ec2-ssh-private-key.pem -o StrictHostKeyChecking=no ${{ vars.EC2_SERVER_USER }}@${{ secrets.EC2_SERVER_HOST }} << 'EOF'
@@ -114,7 +133,7 @@ jobs:
           EOF
 
       # 3. 배포 실행 (이미 파일 다 있으니까 up만 하면 됨)
-      - name: Deploy to EC2 via Docker Compose
+      - name: 도커 컴포즈로 배포 시작
         run: |
           ssh -i ~/.ssh/ec2-ssh-private-key.pem -o StrictHostKeyChecking=no ${{ vars.EC2_SERVER_USER }}@${{ secrets.EC2_SERVER_HOST }} << EOF
               cd ~/app/web-server
