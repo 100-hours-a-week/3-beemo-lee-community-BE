@@ -10,10 +10,10 @@ import java.time.Instant;
 @Entity
 @Getter @Setter
 @RequiredArgsConstructor
+@Table(name = "refresh_tokens")
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)    private Long id;
 
     private Integer userId;
 
