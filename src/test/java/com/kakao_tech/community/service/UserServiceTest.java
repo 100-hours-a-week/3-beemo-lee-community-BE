@@ -59,7 +59,7 @@ class UserServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getNickname()).isEqualTo("테스트유저");
         assertThat(response.getEmail()).isEqualTo("test@example.com");
-        assertThat(response.getProfileUrl()).isEqualTo("https://example.com/profile.jpg");
+        assertThat(response.getProfileUrl()).isEqualTo("/api/images/https://example.com/profile.jpg");
 
         verify(userRepository, times(1)).findById(userId);
     }
