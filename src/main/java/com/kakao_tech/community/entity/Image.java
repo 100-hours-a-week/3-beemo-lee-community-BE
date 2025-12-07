@@ -15,11 +15,11 @@ public class Image {
     private Integer id;
 
     // S3 키 (예: public/users/profile/profile-uuid.jpg)
-    @Column(unique = true, nullable = false)
+    @Column(name = "s3_key", unique = true, nullable = false)
     private String s3Key;
 
     // 원본 파일명
-    @Column(nullable = true)
+    @Column(name = "original_filename", nullable = true)
     private String originalFilename;
 
     @Column(unique = false, nullable = false, columnDefinition = "DATETIME")
